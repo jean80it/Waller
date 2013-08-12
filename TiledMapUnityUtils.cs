@@ -19,7 +19,7 @@ public class TiledMapUnityUtils
 		return blocks;
 	}
 	
-	static public void InstantiateMap(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xSpacing, float ySpacing)
+    static public void InstantiateMap(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xSpacing, float ySpacing)
 	{
 		var l  = map.Layers[layerName];
 		for (int y = 0; y<l.HeightCells; ++y)
@@ -71,5 +71,31 @@ public class TiledMapUnityUtils
 		GameObject obj = (GameObject)GameObject.Instantiate(original, pos, a);
 		obj.transform.localScale = s;
 	}
+
+    static public void InstantiateObjects(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xSpacing, float ySpacing)
+    {
+        var l = map.ObjectGroups[layerName];
+        foreach (TiledObject to in l.TiledObjects)
+        {
+            //... instantiate gameobject accordingly
+            GameObject block;
+            if (!tilesBlocksMap.TryGetValue(to.Gid, out block))
+            {
+                continue;
+            }
+
+            instantiateBlock(block, new Vector3(to.X * xSpacing, 0, -to.y * ySpacing), to.rotation);
+        }
+    }
+
+    static private void instantiateBlock(UnityEngine.Object original, Vector3 pos, float yrotation)
+    {
+        Quaternion a = Quaternion.Euler(0, yrotation, 0);
+        
+        GameObject obj = (GameObject)GameObject.Instantiate(original, pos, a);
+    }
+
+    
+	
 }
 

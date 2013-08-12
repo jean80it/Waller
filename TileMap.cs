@@ -30,6 +30,14 @@ namespace TiledMapLoader
         }
     }
 
+    public class ObjectLayerNamedList : KeyedCollection<string, ObjectLayer>
+    {
+        protected override string GetKeyForItem(ObjectLayer item)
+        {
+            return item.Name;
+        }
+    }
+
     //<map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
 
     [XmlRoot("map")]
@@ -109,6 +117,10 @@ namespace TiledMapLoader
 
         [XmlElement("layer")]
         public MapLayerNamedList Layers { get; set; }
+
+        [XmlElement("objectgroup")]
+        public ObjectLayerNamedList ObjectGroups { get; set; }
+
     }
 
 
@@ -492,7 +504,39 @@ namespace TiledMapLoader
             }
         }
     }
-	
+
+    //<objectgroup name="ItemLayer1" width="10" height="10">
+    public class ObjectLayer : INamed
+    {
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlAttribute("width")]
+        public int WidthCells { get; set; }
+
+        [XmlAttribute("height")]
+        public int HeightCells { get; set; }
+
+        [XmlElement("object")]
+        public List<TiledObject> TiledObjects { get; set; }
+    }
+
+    //<object gid="1" x="34" y="128"/>
+    public class TiledObject
+    {
+        [XmlAttribute("gid")]
+        public int Gid { get; set; }
+
+        [XmlAttribute("x")]
+        public int X { get; set; }
+
+        [XmlAttribute("y")]
+        public int Y { get; set; }
+
+        [XmlAttribute("rotation")]
+        public float rotation { get; set; }
+    }
+
 	public class Base64ToXmlReaderWriterStream : Stream
     {
         System.Xml.XmlReader _reader;
