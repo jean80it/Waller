@@ -10,7 +10,7 @@ namespace WallerTest
     {
         static void Main(string[] args)
         {
-            var map = TiledMapLoader.TileMap.FromFile("prova2.tmx");
+            var map = TiledMapLoader.TileMap.FromFile("provaObj.tmx");
         }
     }
 }

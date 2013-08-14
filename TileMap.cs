@@ -38,7 +38,7 @@ namespace TiledMapLoader
         }
     }
 
-    //<map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
+    //e.g.: <map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
 
     [XmlRoot("map")]
     public class TileMap
@@ -124,7 +124,7 @@ namespace TiledMapLoader
     }
 
 
-    //<tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" spacing="2" margin="1">
+    //e.g.: <tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" spacing="2" margin="1">
 
     //[XmlRoot("tileset")]
     public class Tileset : INamed
@@ -155,7 +155,7 @@ namespace TiledMapLoader
     }
 
 
-    // <tileoffset x="0" y="16"/>
+    //e.g.: <tileoffset x="0" y="16"/>
 
     //[XmlRoot("tileoffset")]
     public class TileOffset
@@ -168,7 +168,7 @@ namespace TiledMapLoader
     }
 
 
-    // <image source="isometric_grass_and_water.png" width="256" height="384"/>
+    //e.g.: <image source="isometric_grass_and_water.png" width="256" height="384"/>
 
     //[XmlRoot("image")]
     public class TileImage
@@ -183,7 +183,7 @@ namespace TiledMapLoader
         public int Height { get; set; }
     }
 
-    // <layer name="Tile Layer 1" width="25" height="25">
+    //e.g.: <layer name="Tile Layer 1" width="25" height="25">
 
     //[XmlRoot("layer")]
     public class MapLayer : INamed
@@ -505,7 +505,7 @@ namespace TiledMapLoader
         }
     }
 
-    //<objectgroup name="ItemLayer1" width="10" height="10">
+    //e.g.: <objectgroup name="ItemLayer1" width="10" height="10">
     public class ObjectLayer : INamed
     {
         [XmlAttribute("name")]
@@ -521,7 +521,7 @@ namespace TiledMapLoader
         public List<TiledObject> TiledObjects { get; set; }
     }
 
-    //<object gid="1" x="34" y="128"/>
+    //e.g.: <object gid="1" x="34" y="128"/>
     public class TiledObject
     {
         [XmlAttribute("gid")]
