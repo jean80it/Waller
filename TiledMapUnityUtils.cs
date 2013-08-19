@@ -18,29 +18,42 @@ public class TiledMapUnityUtils
 		
 		return blocks;
 	}
-	
+
     static public void InstantiateMap(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xSpacing, float ySpacing)
-	{
-		var l  = map.Layers[layerName];
-		for (int y = 0; y<l.HeightCells; ++y)
-		{	
-			for (int x = 0; x<l.WidthCells; ++x)
-			{
-				var t = l.GetTile(x,y);
-				var code = l.Data.GetCode(t);
-				TilesTransforms rot = l.Data.GetTransform(t);
-				
-				//... instantiate gameobject accordingly
-				GameObject block;
-				if (!tilesBlocksMap.TryGetValue((int)code, out block))
-				{
-					continue;
-				}
-				
-				instantiateBlock(block, new Vector3(x*xSpacing,0,-y*ySpacing), rot);
-			}
-		}
-	}
+    {
+        var l = map.Layers[layerName];
+        for (int y = 0; y < l.HeightCells; ++y)
+        {
+            for (int x = 0; x < l.WidthCells; ++x)
+            {
+                var t = l.GetTile(x, y);
+                var code = l.Data.GetCode(t);
+                TilesTransforms rot = l.Data.GetTransform(t);
+
+                //... instantiate gameobject accordingly
+                GameObject block;
+                if (!tilesBlocksMap.TryGetValue((int)code, out block))
+                {
+                    continue;
+                }
+
+                if (block == null)
+                {
+#if DEBUG
+                    if (code != 0)
+                    {
+                        throw new Exception(string.Format("Tile code {0} missing.", code));
+                    }
+#endif
+                }
+                else
+                {
+                    instantiateBlock(block, new Vector3(x * xSpacing, 0, -y * ySpacing), rot);
+                }
+            }
+        }
+    }
+
 	
 	static private void instantiateBlock(UnityEngine.Object original, Vector3 pos, TilesTransforms rot)
 	{

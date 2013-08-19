@@ -666,8 +666,45 @@ namespace TiledMapLoader
             }
 
             set 
-            { 
-            
+            {
+                switch (value)
+                {
+                    case ObjectShapes.Tile:
+                        PolygonObjectParams = null;
+                        PolyLineParams = null;
+                        EllipseObjectParams = null;
+                        break;
+
+                    case ObjectShapes.Ellipse:
+                        Gid = -1;
+                        PolygonObjectParams = null;
+                        PolyLineParams = null;
+                        EllipseObjectParams = new EllipseObjectTag();
+                        break;
+
+                    case ObjectShapes.Polygon:
+                        Gid = -1;
+                        PolygonObjectParams = new PolygonObjectTag();
+                        PolyLineParams = null;
+                        EllipseObjectParams = null;
+                        break;
+
+                    case ObjectShapes.PolyLine:
+                        Gid = -1;
+                        PolygonObjectParams = null;
+                        PolyLineParams = new PolyLineObjectTag();
+                        EllipseObjectParams = null;
+                        break;
+
+                    //case ObjectShapes.Unset:
+                    //case ObjectShapes.Rectangle:
+                    default:
+                        Gid = -1;
+                        PolygonObjectParams = null;
+                        PolyLineParams = null;
+                        EllipseObjectParams = null;
+                        break;
+                }
             }
         }
     }
