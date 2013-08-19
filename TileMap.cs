@@ -324,6 +324,10 @@ namespace TiledMapLoader
                             Compression = Compressions.gzip;
                             break;
 
+                        case "zlib":
+                            Compression = Compressions.zlib;
+                            break;
+
                         default:
                             throw new Exception("Unrecognized compression.");
                     }
