@@ -14,7 +14,17 @@
   </data>
  </layer>
  <objectgroup draworder="topdown" name="Livello di Oggetti 1" width="100" height="100">
-  <object gid="46" x="174" y="188" rotation="-32.2061"/>
-  <object gid="46" x="836" y="89" rotation="-300.964"/>
+  <object gid="46" x="128" y="384" rotation="-32.2061"/>
+  <object gid="46" x="928" y="128" rotation="-300.964"/>
+  <object name="pippo" type="bla" x="992" y="96" width="384" height="320" rotation="36.3129"/>
+  <object x="832" y="416" width="288" height="192">
+   <ellipse/>
+  </object>
+  <object x="192" y="192">
+   <polygon points="0,0 0,288 352,96"/>
+  </object>
+  <object x="448" y="576">
+   <polyline points="0,0 256,64 0,256 -192,192 -320,96"/>
+  </object>
  </objectgroup>
 </map>

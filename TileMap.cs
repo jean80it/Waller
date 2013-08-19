@@ -528,7 +528,55 @@ namespace TiledMapLoader
     //e.g.: <object gid="1" x="34" y="128"/>
     public class TiledObject
     {
+        public enum ObjectShapes : int
+        { 
+            Unset = 0,
+            Tile = 1,
+            Rectangle = 2,
+            Ellipse = 3,
+            Polygon = 4,
+            PolyLine = 5
+        }
+
+        public TiledObject()
+        {
+            Gid = -1;
+        }
+
+        private int strToInt(string s)
+        {
+            int i;
+            if (int.TryParse(s, out i))
+            {
+                return i;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlAttribute("type")]
+        public string TypeString { get; set; }
+
         [XmlAttribute("gid")]
+        public string GidString 
+        {
+            get
+            {
+                return Gid + "";
+            }
+
+            set
+            {
+                Gid = strToInt(value);
+            }
+        }
+
+        [XmlIgnore]
         public int Gid { get; set; }
 
         [XmlAttribute("x")]
@@ -537,11 +585,118 @@ namespace TiledMapLoader
         [XmlAttribute("y")]
         public int Y { get; set; }
 
+
+        [XmlIgnore]
+        public int Width { get; set; }
+
+        [XmlIgnore]
+        public int Height { get; set; }
+
+        [XmlAttribute("width")]
+        public string WidthString
+        {
+            get
+            {
+                return Width + "";
+            }
+
+            set
+            {
+                Width = strToInt(value);
+            }
+        }
+
+        [XmlAttribute("height")]
+        public string HeightString
+        {
+            get
+            {
+                return Height + "";
+            }
+
+            set
+            {
+                Height = strToInt(value);
+            }
+        }
+
         [XmlAttribute("rotation")]
-        public float rotation { get; set; }
+        public float Rotation { get; set; }
+
+
+        // Object Type handling
+
+        [XmlElement("polyline")]
+        public PolyLineObjectTag PolyLineParams { get; set; }
+
+        [XmlElement("polygon")]
+        public PolygonObjectTag PolygonObjectParams { get; set; }
+
+        [XmlElement("ellipse")]
+        public EllipseObjectTag EllipseObjectParams { get; set; }
+
+        public ObjectShapes ObjectShape
+        {
+            get
+            {
+                if (Gid != -1)
+                    return ObjectShapes.Tile;
+
+                if ((PolyLineParams == null) && (PolygonObjectParams == null) && (EllipseObjectParams == null))
+                {
+                    return ObjectShapes.Rectangle;
+                }
+
+                if (PolyLineParams != null)
+                {
+                    return ObjectShapes.PolyLine;
+                }
+
+                if (PolygonObjectParams != null)
+                {
+                    return ObjectShapes.Polygon;
+                }
+
+                if (EllipseObjectParams != null)
+                {
+                    return ObjectShapes.Ellipse;
+                }
+
+                return ObjectShapes.Unset;
+            }
+
+            set 
+            { 
+            
+            }
+        }
     }
 
-	public class Base64ToXmlReaderWriterStream : Stream
+    public class PolyLineObjectTag
+    {
+        [XmlAttribute("points")]
+        public string PointsString { get; set; }
+
+        // TODO: structured points
+
+        // TODO: transformed points
+    }
+
+    public class PolygonObjectTag
+    {
+        [XmlAttribute("points")]
+        public string PointsString { get; set; }
+
+        // TODO: structured points
+
+        // TODO: transformed points
+    }
+
+    public class EllipseObjectTag
+    {
+    }
+
+    public class Base64ToXmlReaderWriterStream : Stream
     {
         System.Xml.XmlReader _reader;
         System.Xml.XmlWriter _writer;
