@@ -21,13 +21,10 @@ public class MapManagerScript : MonoBehaviour {
 	public float FloorHeight = 2.0f;
 	
     void Start () {
-        //assegna alla variabile temporanea il file tmx da prendere come mappa
         var map = TileMap.FromFile(MapPath);
         
-        //crea un dizionario che servirà per prendere i tiled dalla mappa e assegnarli al prefab in-game
         Dictionary<int, GameObject> tileCodeToPrefab = new Dictionary<int, GameObject>();
 
-        //assegna al dizionario ogni prefab dalla lista
         for (int i = 0, l = TilesPrefabs.Count; i < l; i++)
         {
             tileCodeToPrefab.Add(i, TilesPrefabs[i]);
