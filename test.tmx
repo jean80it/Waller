@@ -16,7 +16,11 @@
  <objectgroup draworder="topdown" name="Livello di Oggetti 1" width="100" height="100">
   <object gid="46" x="128" y="384" rotation="-32.2061"/>
   <object gid="46" x="928" y="128" rotation="-300.964"/>
-  <object name="pippo" type="bla" x="992" y="96" width="384" height="320" rotation="36.3129"/>
+  <object name="pippo" type="bla" x="992" y="96" width="384" height="320" rotation="36.3129">
+   <properties>
+    <property name="piiiii" value="peppa"/>
+   </properties>
+  </object>
   <object x="832" y="416" width="288" height="192">
    <ellipse/>
   </object>
