@@ -38,6 +38,23 @@ namespace TiledMapLoader
         }
     }
 
+	public class KeyValueProperty
+	{
+		[XmlAttribute("name")]
+		public string Name { get; set; }
+		
+		[XmlAttribute("value")]
+		public string Value { get; set; }
+	}
+	
+	public class PropertiesNamedList : KeyedCollection<string, KeyValueProperty>
+    {
+        protected override string GetKeyForItem(KeyValueProperty item)
+        {
+            return item.Name;
+        }
+    }
+    
     //e.g.: <map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
 
     [XmlRoot("map")]
@@ -120,7 +137,10 @@ namespace TiledMapLoader
 
         [XmlElement("objectgroup")]
         public ObjectLayerNamedList ObjectGroups { get; set; }
-
+	
+	[XmlArray("properties")]
+    	[XmlArrayItem("property")] 
+	public PropertiesNamedList Properties { get; set; }
     }
 
 
@@ -248,6 +268,7 @@ namespace TiledMapLoader
             [Flags]
             public enum TilesTransforms : uint
             {
+                None = 0,
                 HFlip = 4,
                 VFlip = 2,
                 DFlip = 1,
@@ -507,6 +528,10 @@ namespace TiledMapLoader
                 return Data.DefaultTileCode;
             }
         }
+	
+	[XmlArray("properties")]
+    	[XmlArrayItem("property")] 
+        public PropertiesNamedList Properties { get; set; }
     }
 
     //e.g.: <objectgroup name="ItemLayer1" width="10" height="10">
@@ -523,6 +548,10 @@ namespace TiledMapLoader
 
         [XmlElement("object")]
         public List<TiledObject> TiledObjects { get; set; }
+	
+	[XmlArray("properties")]
+    	[XmlArrayItem("property")] 
+	public PropertiesNamedList Properties { get; set; }
     }
 
     //e.g.: <object gid="1" x="34" y="128"/>
@@ -707,6 +736,10 @@ namespace TiledMapLoader
                 }
             }
         }
+
+	[XmlArray("properties")]
+    	[XmlArrayItem("property")] 
+	public PropertiesNamedList Properties { get; set; }
     }
 
     public class PolyLineObjectTag
