@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using TiledMapLoader;
 using UnityEngine;
-using TilesTransforms = TiledMapLoader.MapLayer.MapData.TilesTransforms;
+using TilesTransforms = TiledMapLoader.TileLayer.MapData.TilesTransforms;
 
 public class TiledMapUnityUtils
 {
-	static public IDictionary<int, GameObject> LoadTileBlocks(string name, int startCode, int endCode)
+    const string DefaultFloorPropertyName = "floor";
+    const string DefaultIgnorePropertyName = "ignore";
+
+	static public IDictionary<int, GameObject> LoadTilesGameObjects(string name, int startCode, int endCode)
 	{
 		Dictionary<int, GameObject> blocks = new Dictionary<int, GameObject>();
 		
@@ -14,19 +17,19 @@ public class TiledMapUnityUtils
 		{
 	    	var prefab = (GameObject)Resources.Load(string.Format("{0}{1:00}", name, i), typeof(GameObject));
 			blocks.Add(i, prefab);
-			//Debug.Log(string.Format("prefab {0:00} is {1}",i, prefab==null?"null":"not null"));
 		}
 		
 		return blocks;
 	}
 
-    static public void InstantiateMap(MapLayer l, IDictionary<int, GameObject> tilesBlocksMap, float xMultiplier, float yMultiplier, float yOffset)
+    static public void InstantiateTilesLayer(TileMap map, string layerName, IDictionary<int, GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float heightOffset)
     {
+        TileLayer l = map.Layers[layerName];
+        InstantiateTilesLayer(l, tilesPrefabsMap, xMultiplier, yMultiplier, heightOffset);
     }
 
-    static public void InstantiateMap(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xMultiplier, float yMultiplier, float yOffset)
-	{
-		var l  = map.Layers[layerName];
+    static public void InstantiateTilesLayer(TileLayer l, IDictionary<int, GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float heightOffset)
+    {
 		for (int y = 0; y<l.HeightCells; ++y)
 		{	
 			for (int x = 0; x<l.WidthCells; ++x)
@@ -36,13 +39,13 @@ public class TiledMapUnityUtils
 				TilesTransforms rot = l.Data.GetTransform(t);
 				
 				//... instantiate gameobject accordingly
-				GameObject block;
-				if (!tilesBlocksMap.TryGetValue((int)code, out block))
+				GameObject gameObject;
+				if (!tilesPrefabsMap.TryGetValue((int)code, out gameObject))
 				{
 					continue;
 				}
 				
-				if (block==null)
+				if (gameObject==null)
 				{
 					if (code != 0)
 					{
@@ -51,13 +54,53 @@ public class TiledMapUnityUtils
 				}
 				else
 				{
-					instantiateBlock(block, new Vector3(x*xMultiplier, yOffset, -y*yMultiplier), rot);
+                    instantiateGameObject(gameObject, new Vector3(x * xMultiplier, heightOffset, -y * yMultiplier), rot);
 				}
 			}
 		}
 	}
-	
-	static private void instantiateBlock(UnityEngine.Object original, Vector3 pos, TilesTransforms rot)
+
+    static public void InstantiateTilesLayer(TileMap map, string layerName, IList<GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float heightOffset)
+    {
+        TileLayer l = map.Layers[layerName];
+        InstantiateTilesLayer(l, tilesPrefabsMap, xMultiplier, yMultiplier, heightOffset);
+    }
+
+    static public void InstantiateTilesLayer(TileLayer l, IList<GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float heightOffset)
+    {
+        for (int y = 0; y < l.HeightCells; ++y)
+        {
+            for (int x = 0; x < l.WidthCells; ++x)
+            {
+                var t = l.GetTile(x, y);
+                var code = l.Data.GetCode(t);
+                TilesTransforms rot = l.Data.GetTransform(t);
+
+                //... instantiate gameobject accordingly
+                GameObject gameObject;
+                if (!tilesPrefabsMap.Count<=code)
+                {
+                    continue;
+                }
+
+                gameObject = tilesPrefabsMap[(int)code];
+
+                if (gameObject == null)
+                {
+                    if (code != 0)
+                    {
+                        throw new Exception(string.Format("Tile code {0} missing.", code));
+                    }
+                }
+                else
+                {
+                    instantiateGameObject(gameObject, new Vector3(x * xMultiplier, heightOffset, -y * yMultiplier), rot);
+                }
+            }
+        }
+    }
+
+	static private void instantiateGameObject(UnityEngine.Object original, Vector3 pos, TilesTransforms rot)
 	{
 		Vector3 s = new Vector3(1,1,1);
         float angle = 0;
@@ -161,30 +204,141 @@ public class TiledMapUnityUtils
 
 	}
 
-    static public void InstantiateObjects(TileMap map, string layerName, IDictionary<int, GameObject> tilesBlocksMap, float xMultiplier, float yMultiplier, float yOffset)
+    static public void InstantiateObjectsGroup(TileMap map, string layerName, IDictionary<int, GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float yOffset)
     {
-        var l = map.ObjectGroups[layerName];
+        ObjectGroup l = map.ObjectGroups[layerName];
+        InstantiateObjectsGroup(l, tilesPrefabsMap, xMultiplier, yMultiplier, yOffset);
+    }
+
+    static public void InstantiateObjectsGroup(ObjectGroup l, IDictionary<int, GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float yOffset)
+    {
+        xMultiplier = xMultiplier / map.TileWidth;
+        yMultiplier = yMultiplier / map.TileHeight;
+
         foreach (TiledObject to in l.TiledObjects)
         {
             //... instantiate gameobject accordingly
-            GameObject block;
-            if (!tilesBlocksMap.TryGetValue(to.Gid, out block))
+            GameObject gameObject;
+            if (!tilesPrefabsMap.TryGetValue(to.Gid, out gameObject))
             {
                 continue;
             }
 
-            instantiateBlock(block, new Vector3(to.X * xMultiplier, yOffset, -to.Y * yMultiplier), to.Rotation);
+            instantiateGameObject(gameObject, new Vector3(to.X * xMultiplier, yOffset, -to.Y * yMultiplier), to.Rotation);
         }
     }
 
-    static private void instantiateBlock(UnityEngine.Object original, Vector3 pos, float yrotation)
+    static public void InstantiateObjectsGroup(TileMap map, string layerName, IList<GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float yOffset)
+    {
+        ObjectGroup l = map.ObjectGroups[layerName];
+        InstantiateObjectsGroup(l, tilesPrefabsMap, xMultiplier, yMultiplier, yOffset);
+    }
+
+    static public void InstantiateObjectsGroup(ObjectGroup l, IList<GameObject> tilesPrefabsMap, float xMultiplier, float yMultiplier, float yOffset)
+    {
+        xMultiplier = xMultiplier / map.TileWidth;
+        yMultiplier = yMultiplier / map.TileHeight;
+
+        var l = map.ObjectGroups[layerName];
+        foreach (TiledObject to in l.TiledObjects)
+        {
+            //... instantiate gameobject accordingly
+            if (!tilesPrefabsMap.Count <= code)
+            {
+                continue;
+            }
+
+            gameObject = tilesPrefabsMap[(int)code];
+
+            if (gameObject == null)
+            {
+                if (code != 0)
+                {
+                    throw new Exception(string.Format("Tile code {0} missing (while instantiating object).", code));
+                }
+            }
+            else
+            {
+                instantiateGameObject(gameObject, new Vector3(to.X * xMultiplier, yOffset, -to.Y * yMultiplier), to.Rotation);
+            }
+        }
+    }
+
+    static private void instantiateGameObject(UnityEngine.Object original, Vector3 pos, float yrotation)
+    {
+        instantiateGameObject(original, pos, yrotation, null);
+    }
+
+    static private void instantiateGameObject(UnityEngine.Object original, Vector3 pos, float yrotation, PropertiesNamedList properties)
     {
         Quaternion a = Quaternion.Euler(0, yrotation, 0);
         
         GameObject obj = (GameObject)GameObject.Instantiate(original, pos, a);
+
+        TiledPropertiesUnityComponent propertiesComponent = (TiledPropertiesUnityComponent)obj.AddComponent("TiledPropertiesUnityComponent");
+        propertiesComponent.Properties = properties;
+        //propertiesComponent.MyMap = ...
     }
 
-    
+    // TODO: add directions, scale and orientation correction; consider making this a "factory"
+
+    static public void InstantiateWholeMap(TileMap map, IList<GameObject> tilesPrefabsMap)
+    {
+        InstantiateWholeMap(map, tilesPrefabsMap, DefaultFloorPropertyName, DefaultIgnorePropertyName);
+    }
+
+    static public void InstantiateWholeMap(TileMap map, IDictionary<int, GameObject> tilesPrefabsMap)
+    {
+        InstantiateWholeMap(map, tilesPrefabsMap, DefaultFloorPropertyName, DefaultIgnorePropertyName);
+    }
+
+    static public void InstantiateWholeMap(TileMap map, IList<GameObject> tilesPrefabsMap, string floorPropertyName, string ignorePropertyName)
+    {
+        InstantiateWholeMap(map, tilesPrefabsMap, floorPropertyName, ignorePropertyName, new Vector2(1.0f, 1.0f), new Vector2(1.0f, 1.0f));
+    }
+
+    static public void InstantiateWholeMap(TileMap map, IDictionary<int, GameObject> tilesPrefabsMap, string floorPropertyName, string ignorePropertyName)
+    {
+        InstantiateWholeMap(map, tilesPrefabsMap, floorPropertyName, ignorePropertyName, new Vector2(1.0f, 1.0f), new Vector2(1.0f, 1.0f));
+    }
+
+    static public void InstantiateWholeMap(TileMap map, IList<GameObject> tilesPrefabsMap, string floorPropertyName, string ignorePropertyName, Vector2 TilesPositionMultiplier, Vector2 ObjectsPositionMultiplier)
+    {
+        foreach (TileLayer l in map.Layers)
+        {
+            if (!l.Properties.GetAsBool(ignorePropertyName))
+            {
+                InstantiateTilesLayer(map, l.Name, tilesPrefabsMap, TilesPositionMultiplier.x, TilesPositionMultiplier.y, l.Properties.GetAsFloat(floorPropertyName) * FloorHeight);
+            }
+        }
+
+        foreach (ObjectGroup l in map.ObjectGroups)
+        {
+            if (!l.Properties.GetAsBool(ignorePropertyName))
+            {
+                InstantiateObjectsGroup(map, l.Name, tilesPrefabsMap, ObjectsPositionMultiplier.x, ObjectsPositionMultiplier.y, l.Properties.GetAsFloat(floorPropertyName) * FloorHeight);
+            }
+        }
+    }
+
+    static public void InstantiateWholeMap(TileMap map, IDictionary<int, GameObject> tilesPrefabsMap, string floorPropertyName, string ignorePropertyName, Vector2 TilesPositionMultiplier, Vector2 ObjectsPositionMultiplier)
+    {
+        foreach (TileLayer l in map.Layers)
+        {
+            if (!l.Properties.GetAsBool(ignorePropertyName))
+            {
+                InstantiateTilesLayer(l, tilesPrefabsMap, TilesPositionMultiplier.x, TilesPositionMultiplier.y, l.Properties.GetAsFloat(floorPropertyName) * FloorHeight);
+            }
+        }
+
+        foreach (ObjectGroup l in map.ObjectGroups)
+        {
+            if (!l.Properties.GetAsBool(ignorePropertyName))
+            {
+                InstantiateObjectsGroup(l, tilesPrefabsMap, ObjectsPositionMultiplier.x, ObjectsPositionMultiplier.y, l.Properties.GetAsFloat(floorPropertyName) * FloorHeight);
+            }
+        }
+    }
 	
 }
 

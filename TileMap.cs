@@ -9,53 +9,7 @@ using System.Xml.Serialization;
 
 namespace TiledMapLoader
 {
-    public interface INamed
-    { 
-        string Name {get; set;}
-    }
-
-    public class TileSetNamedList : KeyedCollection<string, Tileset>
-    {
-        protected override string GetKeyForItem(Tileset item)
-        {
-            return item.Name;
-        }
-    }
-
-    public class MapLayerNamedList : KeyedCollection<string, MapLayer>
-    {
-        protected override string GetKeyForItem(MapLayer item)
-        {
-            return item.Name;
-        }
-    }
-
-    public class ObjectLayerNamedList : KeyedCollection<string, ObjectLayer>
-    {
-        protected override string GetKeyForItem(ObjectLayer item)
-        {
-            return item.Name;
-        }
-    }
-
-	public class KeyValueProperty
-	{
-		[XmlAttribute("name")]
-		public string Name { get; set; }
-		
-		[XmlAttribute("value")]
-		public string Value { get; set; }
-	}
-	
-	public class PropertiesNamedList : KeyedCollection<string, KeyValueProperty>
-    {
-        protected override string GetKeyForItem(KeyValueProperty item)
-        {
-            return item.Name;
-        }
-    }
-    
-    //e.g.: <map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
+    // e.g.: <map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
     [XmlRoot("map")]
     public class TileMap
     {
@@ -78,7 +32,22 @@ namespace TiledMapLoader
 
         public static TileMap FromStream(Stream stream)
         {
-            return (TileMap)MapXmlSerializer.Deserialize(stream);
+            TileMap map = (TileMap)MapXmlSerializer.Deserialize(stream);
+            fixLayersParent(map);
+            return map;
+        }
+
+        private static void fixLayersParent(TileMap map)
+        {
+            foreach (var l in map.Layers)
+            {
+                l.ParentMap = map;
+            }
+            
+            foreach (var l in map.ObjectGroups)
+            {
+                l.ParentMap = map;
+            }
         }
 
         public static TileMap FromFile(string fileName)
@@ -139,12 +108,12 @@ namespace TiledMapLoader
         [XmlElement("objectgroup")]
         public ObjectLayerNamedList ObjectGroups { get; set; }
 	
-	[XmlArray("properties")]
-    	[XmlArrayItem("property")] 
-	public PropertiesNamedList Properties { get; set; }
+        [XmlArray("properties")]
+        [XmlArrayItem("property")] 
+        public PropertiesNamedList Properties { get; set; }
     }
 
-    //e.g.: <tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" spacing="2" margin="1">
+    // e.g.: <tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" spacing="2" margin="1">
     public class Tileset : INamed
     {
         [XmlAttribute("firstgid")]
@@ -174,7 +143,7 @@ namespace TiledMapLoader
         public TileImage Image { get; set; }
     }
 
-    //e.g.: <tileoffset x="0" y="16"/>
+    // e.g.: <tileoffset x="0" y="16"/>
     public class TileOffset
     {
         [XmlAttribute("x")]
@@ -184,7 +153,7 @@ namespace TiledMapLoader
         public int Y { get; set; } // positive is down
     }
 
-    //e.g.: <image source="isometric_grass_and_water.png" width="256" height="384"/>
+    // e.g.: <image source="isometric_grass_and_water.png" width="256" height="384"/>
     public class TileImage
     {
         //format: Used for embedded images, in combination with a data child element
@@ -203,17 +172,11 @@ namespace TiledMapLoader
 
     // TODO: terraintypes, terrain
 
-    //e.g.: <layer name="Tile Layer 1" width="25" height="25">
-    public class MapLayer : INamed
+    // e.g.: <layer name="Tile Layer 1">
+    public class TileLayer : INamed
     {
         [XmlAttribute("name")]
         public string Name { get; set; }
-
-        [XmlAttribute("width")]
-        public int WidthCells { get; set; }
-
-        [XmlAttribute("height")]
-        public int HeightCells { get; set; }
 
         [XmlAttribute("opacity")]
         public float Opacity { get; set; }
@@ -223,7 +186,7 @@ namespace TiledMapLoader
         [XmlElement("data")]
         public MapData Data { get; set; }
 
-        public MapLayer()
+        public TileLayer()
         { 
             // default values
             Opacity = 1.0f;
@@ -527,28 +490,64 @@ namespace TiledMapLoader
             }
         }
 	
-	[XmlArray("properties")]
-    	[XmlArrayItem("property")] 
+        [XmlArray("properties")]
+        [XmlArrayItem("property")] 
         public PropertiesNamedList Properties { get; set; }
+
+        #region parent map stuff
+
+        private TileMap _parentMap = null;
+
+        public TileMap ParentMap
+        {
+            get 
+            {
+                // TODO: some sort of automatic parent retrieval
+                return _parentMap;
+            }
+
+            set 
+            {
+                if (_parentMap != null)
+                {
+                    if (_parentMap.Layers.Contains(this))
+                    {
+                        _parentMap.Layers.Remove(this);
+                    }
+                }
+                
+                _parentMap = value;
+                
+                if (!_parentMap.Layers.Contains(this))
+                {
+                    _parentMap.Layers.Add(this);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public int WidthCells
+        {
+            get { return ParentMap.Width; }
+        }
+
+        [XmlIgnore]
+        public int HeightCells
+        {
+            get { return ParentMap.Height; }
+        }
+
+        #endregion // parent map stuff
     }
 
-    //e.g.: <objectgroup name="ItemLayer1" width="10" height="10">
-    public class ObjectLayer : INamed
+    // e.g.: <objectgroup name="ItemLayer1">
+    public class ObjectGroup : INamed
     {
         [XmlAttribute("name")]
         public string Name { get; set; }
 
         // color: The color used to display the objects in this group
-        
-        
-        // deprecated
-
-        //[XmlAttribute("width")]
-        //public int WidthCells { get; set; }
-
-        //[XmlAttribute("height")]
-        //public int HeightCells { get; set; }
-
+       
         [XmlAttribute("opacity")]
         public float Opacity { get; set; }
 
@@ -560,13 +559,58 @@ namespace TiledMapLoader
         [XmlArrayItem("property")] 
         public PropertiesNamedList Properties { get; set; }
 
-        public ObjectLayer()
+        public ObjectGroup()
         {
             Opacity = 1.0f;
         }
+
+        #region parent map stuff
+
+        private TileMap _parentMap = null;
+
+        public TileMap ParentMap
+        {
+            get
+            {
+                // TODO: some sort of automatic parent retrieval
+                return _parentMap;
+            }
+
+            set
+            {
+                if (_parentMap != null)
+                {
+                    if (_parentMap.ObjectGroups.Contains(this))
+                    {
+                        _parentMap.ObjectGroups.Remove(this);
+                    }
+                }
+
+                _parentMap = value;
+
+                if (!_parentMap.ObjectGroups.Contains(this))
+                {
+                    _parentMap.ObjectGroups.Add(this);
+                }
+            }
+        }
+
+        [XmlIgnore]
+        public int WidthCells
+        {
+            get { return ParentMap.Width; }
+        }
+
+        [XmlIgnore]
+        public int HeightCells
+        {
+            get { return ParentMap.Height; }
+        }
+
+        #endregion // parent map stuff
     }
 
-    //e.g.: <object gid="1" x="34" y="128"/>
+    // e.g.: <object name="thatStuff" type="someStuff" x="992" y="96" width="384" height="320" rotation="36.3129">
     public class TiledObject : INamed
     {
         public enum ObjectShapes : int
@@ -755,6 +799,7 @@ namespace TiledMapLoader
 	public PropertiesNamedList Properties { get; set; }
     }
 
+    // e.g.: <polyline points="0,0 256,64 0,256 -192,192 -320,96"/>
     public class PolyLineObjectTag
     {
         [XmlAttribute("points")]
@@ -765,6 +810,7 @@ namespace TiledMapLoader
         // TODO: transformed points
     }
 
+    // e.g.: <polygon points="0,0 0,288 352,96"/>
     public class PolygonObjectTag
     {
         [XmlAttribute("points")]
@@ -775,10 +821,101 @@ namespace TiledMapLoader
         // TODO: transformed points
     }
 
+    // e.g.: <ellipse/>
     public class EllipseObjectTag
     { }
 
+    // e.g.: <property name="Strength" value="100"/>
+    public class KeyValueProperty
+    {
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlAttribute("value")]
+        public string Value { get; set; }
+    }
+
     // TODO: imagelayer
+
+    #region Named lists
+
+    public interface INamed
+    {
+        string Name { get; set; }
+    }
+
+    public class TileSetNamedList : KeyedCollection<string, Tileset>
+    {
+        protected override string GetKeyForItem(Tileset item)
+        {
+            return item.Name;
+        }
+    }
+
+    public class MapLayerNamedList : KeyedCollection<string, TileLayer>
+    {
+        protected override string GetKeyForItem(TileLayer item)
+        {
+            return item.Name;
+        }
+    }
+
+    public class ObjectLayerNamedList : KeyedCollection<string, ObjectGroup>
+    {
+        protected override string GetKeyForItem(ObjectGroup item)
+        {
+            return item.Name;
+        }
+    }
+
+    public class PropertiesNamedList : KeyedCollection<string, KeyValueProperty>
+    {
+        protected override string GetKeyForItem(KeyValueProperty item)
+        {
+            return item.Name;
+        }
+
+        public float GetAsFloat(string propertyName)
+        {
+            return GetAsFloat(propertyName, 0.0f);
+        }
+
+        public float GetAsFloat(string propertyName, float defaultValue)
+        {
+            if (!this.Contains(propertyName))
+            {
+                return defaultValue;
+            }
+
+            float v;
+
+            if (!float.TryParse(this[propertyName].Value, out v))
+            {
+                return v;
+            }
+
+            return defaultValue;
+        }
+
+        public bool GetAsBool(string propertyName)
+        {
+            return GetAsBool(propertyName, false);
+        }
+
+        public bool GetAsBool(string propertyName, bool defaultValue)
+        {
+            if (!this.Contains(propertyName))
+            {
+                return defaultValue;
+            }
+
+            string v = this[propertyName].Value.Trim().ToLowerInvariant();
+
+            return !(string.IsNullOrEmpty(v) || v.Equals("0") || v.Equals("false"));
+        }
+    }
+
+    #endregion // Named lists
 
     public class Base64ToXmlReaderWriterStream : Stream
     {

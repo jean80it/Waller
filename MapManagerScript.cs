@@ -8,18 +8,22 @@ using System;
 
 public class MapManagerScript : MonoBehaviour {
 
-    const string floorPropertyName = "floor";
-    const string ignorePropertyName = "ignore";
+    public string FloorPropertyName = "floor";
+    public string IgnorePropertyName = "ignore";
 
-    public Vector2 TileMultiplier = new Vector2(1, 1);
-    public Vector2 ObjectMultiplier = new Vector2(0.03125f, 0.03125f); // 1/32 (if 32 is your base tile size in pixels and you want 1 to be the base prefab size in Unity)
+    public Vector2 TilesPositionMultiplier = new Vector2(1.0f, 1.0f);
+    public Vector2 ObjectsPositionMultiplier = new Vector2(1.0f, 1.0f); // 1/32 (if 32 is your base tile size in pixels and you want 1 to be the base prefab size in Unity)
 
     public List<GameObject> TilesPrefabs = new List<GameObject>();
     
     public string MapPath = "";
 	
 	public float FloorHeight = 2.0f;
-	
+
+    public Vector3 XDirection = new Vector3(1.0f, 0.0f, 0.0f);
+    public Vector3 YDirection = new Vector3(0.0f, 0.0f, 1.0f);
+    public Vector3 ZDirection = new Vector3(0.0f, 1.0f, 0.0f);
+
     void Start () {
         var map = TileMap.FromFile(MapPath);
         
@@ -30,13 +34,15 @@ public class MapManagerScript : MonoBehaviour {
             tileCodeToPrefab.Add(i, TilesPrefabs[i]);
         }
 
-        foreach (MapLayer l in map.Layers)
+        // TODO: use InstantiateWholeMap instead
+
+        foreach (TileLayer l in map.Layers)
 		{
            float floor = 0;
 
-           if (l.Properties.Contains(floorPropertyName))
+           if (l.Properties.Contains(FloorPropertyName))
 			{
-                if (!float.TryParse(l.Properties[floorPropertyName].Value, out floor))
+                if (!float.TryParse(l.Properties[FloorPropertyName].Value, out floor))
 				{
 					floor = 0;
 				}
@@ -44,26 +50,26 @@ public class MapManagerScript : MonoBehaviour {
 
 			bool ignore = false;
 
-            if (l.Properties.Contains(ignorePropertyName))
+            if (l.Properties.Contains(IgnorePropertyName))
 			{
-                ignore = !string.IsNullOrEmpty(l.Properties[ignorePropertyName].Value);
+                ignore = !string.IsNullOrEmpty(l.Properties[IgnorePropertyName].Value);
 			}
 			
 			if (!ignore)
 			{
-                TiledMapUnityUtils.InstantiateMap(map, l.Name, tileCodeToPrefab, TileMultiplier.x, TileMultiplier.y, floor * FloorHeight);
+                TiledMapUnityUtils.InstantiateTilesLayer(map, l.Name, tileCodeToPrefab, TilesPositionMultiplier.x, TilesPositionMultiplier.y, floor * FloorHeight);
 			}
         }
 
-        foreach (ObjectLayer l in map.ObjectGroups)
+        foreach (ObjectGroup l in map.ObjectGroups)
         {
             string tempString = l.Name;
 
             float floor = 0;
 
-            if (l.Properties.Contains(floorPropertyName))
+            if (l.Properties.Contains(FloorPropertyName))
             {
-                if (!float.TryParse(l.Properties[floorPropertyName].Value, out floor))
+                if (!float.TryParse(l.Properties[FloorPropertyName].Value, out floor))
                 {
                     floor = 0;
                 }
@@ -71,14 +77,14 @@ public class MapManagerScript : MonoBehaviour {
 
             bool ignore = false;
 
-            if (l.Properties.Contains(ignorePropertyName))
+            if (l.Properties.Contains(IgnorePropertyName))
             {
-                ignore = !string.IsNullOrEmpty(l.Properties[ignorePropertyName].Value);
+                ignore = !string.IsNullOrEmpty(l.Properties[IgnorePropertyName].Value);
             }
 
             if (!ignore)
             {
-                TiledMapUnityUtils.InstantiateObjects(map, l.Name, tileCodeToPrefab, ObjectMultiplier.x, ObjectMultiplier.y, floor * FloorHeight);
+                TiledMapUnityUtils.InstantiateObjectsGroup(map, l.Name, tileCodeToPrefab, ObjectsPositionMultiplier.x, ObjectsPositionMultiplier.y, floor * FloorHeight);
             }
         }
 	}
