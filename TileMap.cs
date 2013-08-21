@@ -56,7 +56,6 @@ namespace TiledMapLoader
     }
     
     //e.g.: <map version="1.0" orientation="isometric" width="25" height="25" tilewidth="64" tileheight="32">
-
     [XmlRoot("map")]
     public class TileMap
     {
@@ -129,6 +128,8 @@ namespace TiledMapLoader
         [XmlAttribute("tileheight")]
         public int TileHeight { get; set; }
 
+        // TODO: backgroundcolor
+
         [XmlElement("tileset")]
         public TileSetNamedList TileSets { get; set; }
 
@@ -143,14 +144,13 @@ namespace TiledMapLoader
 	public PropertiesNamedList Properties { get; set; }
     }
 
-
     //e.g.: <tileset firstgid="1" name="isometric_grass_and_water" tilewidth="64" tileheight="64" spacing="2" margin="1">
-
-    //[XmlRoot("tileset")]
     public class Tileset : INamed
     {
         [XmlAttribute("firstgid")]
         public uint FirstGid { get; set; }
+
+        // source:??? (external TSX)
 
         [XmlAttribute("name")]
         public string Name { get; set; }
@@ -174,27 +174,25 @@ namespace TiledMapLoader
         public TileImage Image { get; set; }
     }
 
-
     //e.g.: <tileoffset x="0" y="16"/>
-
-    //[XmlRoot("tileoffset")]
     public class TileOffset
     {
         [XmlAttribute("x")]
         public int X { get; set; }
 
         [XmlAttribute("y")]
-        public int Y { get; set; }
+        public int Y { get; set; } // positive is down
     }
 
-
     //e.g.: <image source="isometric_grass_and_water.png" width="256" height="384"/>
-
-    //[XmlRoot("image")]
     public class TileImage
     {
+        //format: Used for embedded images, in combination with a data child element
+
         [XmlAttribute("source")]
         public string Source { get; set; }
+
+        // trans: Defines a specific color that is treated as transparent (example value: "FF00FF" for magenta)
 
         [XmlAttribute("width")]
         public int Width { get; set; }
@@ -203,9 +201,9 @@ namespace TiledMapLoader
         public int Height { get; set; }
     }
 
-    //e.g.: <layer name="Tile Layer 1" width="25" height="25">
+    // TODO: terraintypes, terrain
 
-    //[XmlRoot("layer")]
+    //e.g.: <layer name="Tile Layer 1" width="25" height="25">
     public class MapLayer : INamed
     {
         [XmlAttribute("name")]
@@ -220,19 +218,19 @@ namespace TiledMapLoader
         [XmlAttribute("opacity")]
         public float Opacity { get; set; }
 
+        // visible: Whether the layer is shown (1) or hidden (0). Defaults to 1
+
         [XmlElement("data")]
         public MapData Data { get; set; }
 
         public MapLayer()
         { 
             // default values
-            Opacity = 100;
+            Opacity = 1.0f;
         }
 
 
-        // <data encoding="base64" compression="gzip">
-        
-		//[XmlRoot("data")]
+        // e.g.:<data encoding="base64" compression="gzip">
         public class MapData : IXmlSerializable
         {
             public MapData()
@@ -540,22 +538,36 @@ namespace TiledMapLoader
         [XmlAttribute("name")]
         public string Name { get; set; }
 
-        [XmlAttribute("width")]
-        public int WidthCells { get; set; }
+        // color: The color used to display the objects in this group
+        
+        
+        // deprecated
 
-        [XmlAttribute("height")]
-        public int HeightCells { get; set; }
+        //[XmlAttribute("width")]
+        //public int WidthCells { get; set; }
+
+        //[XmlAttribute("height")]
+        //public int HeightCells { get; set; }
+
+        [XmlAttribute("opacity")]
+        public float Opacity { get; set; }
 
         [XmlElement("object")]
         public List<TiledObject> TiledObjects { get; set; }
+
 	
-	[XmlArray("properties")]
-    	[XmlArrayItem("property")] 
-	public PropertiesNamedList Properties { get; set; }
+        [XmlArray("properties")]
+        [XmlArrayItem("property")] 
+        public PropertiesNamedList Properties { get; set; }
+
+        public ObjectLayer()
+        {
+            Opacity = 1.0f;
+        }
     }
 
     //e.g.: <object gid="1" x="34" y="128"/>
-    public class TiledObject
+    public class TiledObject : INamed
     {
         public enum ObjectShapes : int
         { 
@@ -652,6 +664,7 @@ namespace TiledMapLoader
         [XmlAttribute("rotation")]
         public float Rotation { get; set; }
 
+        // visible: Whether the object is shown (1) or hidden (0). Defaults to 1. (since 0.9.0)
 
         // Object Type handling
 
@@ -763,8 +776,9 @@ namespace TiledMapLoader
     }
 
     public class EllipseObjectTag
-    {
-    }
+    { }
+
+    // TODO: imagelayer
 
     public class Base64ToXmlReaderWriterStream : Stream
     {

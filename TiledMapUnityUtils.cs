@@ -59,8 +59,31 @@ public class TiledMapUnityUtils
 	
 	static private void instantiateBlock(UnityEngine.Object original, Vector3 pos, TilesTransforms rot)
 	{
-		//Vector3 s = new Vector3(-1,1,-1);
 		Vector3 s = new Vector3(1,1,1);
+        float angle = 0;
+
+        if ((rot && TilesTransforms.Rotate90) == TilesTransforms.Rotate90)
+        {
+            angle = 90;
+            rot &= !TilesTransforms.Rotate90;
+        }
+        else
+        {
+            if ((rot && TilesTransforms.Rotate180) == TilesTransforms.Rotate180)
+            {
+                angle = 180;
+                rot &= !TilesTransforms.Rotate180;
+            }
+            else
+            {
+                if ((rot && TilesTransforms.Rotate270) == TilesTransforms.Rotate270)
+                {
+                    angle = 180;
+                    rot &= !TilesTransforms.Rotate270;
+                }
+            }
+        }
+
 		Quaternion a = Quaternion.Euler(0,0,0);
 //		
 //		bool hflipped = false;
